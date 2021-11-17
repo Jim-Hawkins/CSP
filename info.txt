@@ -1,0 +1,30 @@
+problema = (X, D, C)
+
+X = tabla con filas=profundidad y columnas=pila, {set de contenedores numerados de 0 a n}
+
+ej: pila   0-1-2-3
+profund. 0 N N N N
+         1 N N N N
+         2 E N N E
+         3 X E E X
+         4 X X X X
+
+D = {0..n}
+
+R1 (gravedad): un contenedor debe estar a la mayor profundidad posible (sobre la base o sobre otro contenedor)
+
+R2 (tipo de contenedor): los contenedores con tipo = R debe estar en celdas de tipo = E
+               
+R3 (no recolocación): los contenedores con puerto_destino = 1 deben estar por encima de los que tienen puerto_destino = 2
+
+
+
+
+
+def main(path, configuración_bodega, contenedores):
+    return colocación_contenedores_en_la_bodega;
+
+ej:
+{id_contendedor: (id_pila, profundidad), ...}
+
+
