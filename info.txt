@@ -18,7 +18,7 @@ R1 (gravedad): un contenedor debe estar a la mayor profundidad posible (sobre la
 
 R2 (tipo de contenedor): los contenedores con tipo = R debe estar en celdas de tipo = E
                
-<>R3 (no recolocación): los contenedores con puerto_destino = 1 deben estar por encima de los que tienen puerto_destino = 2
+R3 (no recolocación): los contenedores con puerto_destino = 1 deben estar por encima de los que tienen puerto_destino = 2
 
 <>R4: debe haber al menos tantas celdas tipo=E como contenedores tipo=R
 
