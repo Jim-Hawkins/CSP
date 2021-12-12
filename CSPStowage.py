@@ -42,6 +42,8 @@ class Problema:
         
         self.problem.addConstraint(self.constraint_uno_debajo_de_otro, self.variables)
         
+        self.problem.addConstraint(self.constraint_preferencias, self.variables)
+        
         
         '''problem.addConstraint(constraint_prohibidos, 
                             (variables, prohibidos))
@@ -84,6 +86,20 @@ class Problema:
                     if not ( (args[i].fila - args[j].fila == -1 and args[i].col == args[j].col) ):
                         return False
         return True
+
+    def constraint_preferencias(self, *args):
+        # Que los del puerto dos esten debajo
+        # i = primero // j = otro
+                   
+        for i in range(len(args)):
+            condicion = True
+            for j in range(len(args)):
+                if( i != j and args[i].col == args[j].col):
+                    break
+                         
+                
+        
+
     
     def encuentra_celdas(self, contenedores, tipo):
         res = list()
