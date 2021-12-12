@@ -1,7 +1,9 @@
 import sys
 import constraint
 
-class Punto:
+class Celda:
+    """ Clase que representa a una celda del barco. Toma su posición (fila
+        y columna) y su tipo (normal, electrificada o prohibida) """
     def __init__(self, col, fila, tipo):
         self.fila = fila
         self.col = col
@@ -19,6 +21,8 @@ class Punto:
         return self.__str__()
 
 class Contenedor:
+    """ Clase que representa a un contenedor. Toma su identificador, 
+        su tipo (normal o refrigerado) y su destino (puerto 1 o 2) """
     def __init__(self, id, tipo, destino):
         self.id = int(id)
         self.tipo = tipo
@@ -35,18 +39,24 @@ class Contenedor:
         return self.__str__()
 
 class Problema:
+    """ Clase que representa al problema. Contiene variables, dominios
+        y restricciones. Recibe el esquema del barco y la lista de contenedores """
     def __init__(self, mapa, contenedores):
-
-        # Comprobamos que haya suficientes celdas E para los contenedores R
-        if self.contar_celdas(mapa, "E") < self.contar_contenedores(contenedores, "R"):
+        # Comprobamos que haya suficientes celdas electrificadas para los contenedores refrigerados
+        '''if self.contar_celdas(mapa, "E") < self.contar_contenedores(contenedores, "R"):
             print( "No hay suficientes celdas electrificadas")
-            raise
+            raise'''
+        print(mapa)
 
+        # Creamos la tupla de variables como un vector de 'Contenedor'
         self.variables = list()
         for i in range(len(contenedores)):
             self.variables.append(Contenedor(contenedores[i][0], contenedores[i][1], contenedores[i][2]))
         self.variables = tuple(self.variables)
 
+        # Creamos el dominio como un vector de 'Celda' examinando el mapa por columnas de arriba a abajo.
+        # Cuando se lee una X, se asume que se llega a la base del barco y se procede con la siguiente
+        # columna.
         self.dom = list()
         self.profundidades = list()
         for pila in range(len(mapa[0])):
@@ -54,7 +64,7 @@ class Problema:
             for nivel in range(len(mapa)):
                 if mapa[nivel][pila] == "X": break
                 contador += 1
-                self.dom.append( Punto(pila, nivel, mapa[nivel][pila]) )
+                self.dom.append( Celda(pila, nivel, mapa[nivel][pila]) )
 
             self.profundidades.append(contador - 1)
 
@@ -104,30 +114,7 @@ class Problema:
                    
         for i in range(len(args)):
             condicion = True
-            for j in range(len(args)):
-                
-                '''if( i != j and args[i].col == args[j].col and self.variables[i].destino >= self.variables[j].destino):
-                    condicion = True
-            
-            if not condicion:
-                return False
-        
-        return True'''
-                #si puerto == 1 y (debajo puerto == 1 o puerto == 2 o está en la base): True
-                '''if (self.variables[i].destino == 1 and \
-                        ( args[i].col == args[j].col and args[j].fila - args[i].fila == 1 and \
-                                (self.variables[j].destino == 1 or self.variables[j].destino == 2 or args[i].fila == 2)
-                        )
-                    ):
-                    condicion = True
-                #si puerto == 2 y (debajo puerto == 2 o está en la base): True
-                if (self.variables[i].destino == 2 and \
-                        ( args[i].col == args[j].col and args[j].fila - args[i].fila == 1 and \
-                                (self.variables[j].destino == 2 or args[i].fila == 2)
-                        )
-                    ):
-                    condicion = True'''
-                
+            for j in range(len(args)):                
                 #si puerto == 2 y debajo puerto == 1: False        
                 if (i != j and self.variables[i].destino == 2 and \
                         ( args[i].col == args[j].col and args[j].fila > args[i].fila and \
@@ -184,7 +171,7 @@ def read_doc(path, file):
     with open(path + "/" + file) as infile:
         lectura = infile.readline().split(" ")
         lectura[-1] = lectura[-1].replace("\n", "")
-        while len(lectura) != 1:
+        while len(lectura) > 0 and lectura[0] != '':
             res.append(lectura)
             lectura = infile.readline().split(" ")
             lectura[-1] = lectura[-1].replace("\n", "")
@@ -202,10 +189,7 @@ if __name__ == "__main__":
     except:
         pass
 
-    for i in res:
-        print(i)
-
-    with open(f'{sys.argv[2]}-{sys.argv[3]}.output', 'w') as outfile:
+    with open(f'{sys.argv[1]}/{sys.argv[2]}-{sys.argv[3]}.output', 'w') as outfile:
         outfile.write("Número de soluciones: {}\n".format(len(res)))
         for d in res:
             outfile.write(str(d) + "\n")
