@@ -109,24 +109,19 @@ class Problema:
         # i = uno, j = otro
         # Metodo para checkear que hay un container debajo de otro y que con ello no haya containers volando felices
         for i in range(len(args)):
-            # vecto de condiciones para ver si se llegan a cumplir todas ellas
+            # vector de booleanos para detectar si algún valor cumple la restricción
             condicion = []
+            # si el elemento i-ésimo está en la base, cumple la restricción
+            if args[i].fila == self.profundidades[args[i].col]: 
+                condicion.append(True)
             for j in range(len(args)):
-                # Condicion de que si i y j son diferentes (son dos containers diferentes), que ademas la diferencia de niveles sea uno como mucho, con 
-                # esto conseguimos que no vueles, ya que estaran uno encima de otros, tambien importante que esten los dos containers en la misma
-                # columna porque si no, no tiene sentido hacer esta comprobacion, y qie por ultimo que se este ocupando primeramente el hueco 
-                # mas profundo que haya
-                if( i != j and args[j].fila - args[i].fila == 1 and args[i].col == args[j].col or args[i].fila == self.profundidades[args[i].col]):
+                # Condicion que se cumple si i y j son dos containers diferentes, y la diferencia de niveles es una unidad, con 
+                # esto conseguimos que no vueles, ya que estaran uno encima de otros, tambien importante que esten los dos 
+                # containers en la misma columna
+                if (i != j and args[j].fila - args[i].fila == 1 and args[i].col == args[j].col):
                     # Si todo esto se cumple se hace un add de true a la lista de las condiciones
                     condicion.append(True)
             # si para un i no se ha encontrado ningún j que satisfaga el condicional, termina
-            '''res = False
-            for i in condicion:
-                if i == True:
-                    res = True
-            if res == False:
-                return False'''
-
             if len(condicion) == 0:
                 return False
 
@@ -141,8 +136,8 @@ class Problema:
             condicion = True
             for j in range(len(args)):                
                 #si puerto == 2 y debajo puerto == 1: False        
-                if (i != j and self.variables[i].destino == 2 and \
-                        ( args[i].col == args[j].col and args[j].fila > args[i].fila and \
+                if (i != j and self.variables[i].destino == 2 and
+                        ( args[i].col == args[j].col and args[j].fila > args[i].fila and
                                 (self.variables[j].destino == 1)
                         )
                     ):
@@ -170,7 +165,7 @@ if __name__ == "__main__":
         quit()
     mapa = read_doc(sys.argv[1], sys.argv[2])        
     contenedores = read_doc(sys.argv[1], sys.argv[3])
-    # variable res para el futuro resultado retornado
+    # variable para almacenar resultado del problema
     res = ""
     try:
         res = Problema(mapa, contenedores).solve()
