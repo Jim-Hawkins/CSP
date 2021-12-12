@@ -2,14 +2,14 @@ import sys
 import constraint
 
 class Punto:
-    def __init__(self, col, fila):
+    def __init__(self, col, fila, tipo):
         self.fila = fila
         self.col = col
+        self.tipo = tipo
     
     def __gt__(self, other):
         #if self.fila == other.fila:
         #    return self.col > self.col
-        #print(self, other, self.fila == other.fila + 1 and self.col == other.col)
         return self.fila + 1 == other.fila and self.col == other.col
     
     def __str__(self):
@@ -18,55 +18,72 @@ class Punto:
     def __repr__(self):
         return self.__str__()
 
+class Contenedor:
+    def __init__(self, id, tipo, destino):
+        self.id = int(id)
+        self.tipo = tipo
+        self.destino = int(destino)
+
+    def __lt__(self, other):
+        return self.id < other.id
+    
+    def __str__(self):
+        #return f'{self.id}{self.tipo}{self.destino}'
+        return str(self.id)
+    
+    def __repr__(self):
+        return self.__str__()
+
 class Problema:
     def __init__(self, mapa, contenedores):
 
+        # Comprobamos que haya suficientes celdas E para los contenedores R
+        if self.contar_celdas(mapa, "E") < self.contar_contenedores(contenedores, "R"):
+            print( "No hay suficientes celdas electrificadas")
+            raise
+
         self.variables = list()
         for i in range(len(contenedores)):
-            self.variables.append(f'{contenedores[i][0]}{contenedores[i][1]}{contenedores[i][2]}')
-
+            self.variables.append(Contenedor(contenedores[i][0], contenedores[i][1], contenedores[i][2]))
         self.variables = tuple(self.variables)
 
         self.dom = list()
+        self.profundidades = list()
         for pila in range(len(mapa[0])):
+            contador = 0
             for nivel in range(len(mapa)):
-                self.dom.append( Punto(pila, nivel) )
+                if mapa[nivel][pila] == "X": break
+                contador += 1
+                self.dom.append( Punto(pila, nivel, mapa[nivel][pila]) )
 
+            self.profundidades.append(contador - 1)
+
+        #print(self.profundidades)
         self.problem = constraint.Problem()
         self.problem.addVariables(self.variables, self.dom)
 
-        #prohibidos = encuentra_celdas(contenedores, "X")
-        #electrificados = encuentra_celdas(contenedores, "E")
-
         self.problem.addConstraint(constraint.AllDifferentConstraint(), self.variables)
-        
         self.problem.addConstraint(self.constraint_uno_debajo_de_otro, self.variables)
-        
         self.problem.addConstraint(self.constraint_preferencias, self.variables)
-        
-        
-        '''problem.addConstraint(constraint_prohibidos, 
-                            (variables, prohibidos))
-        problem.addConstraint(constraint_contenedores_ordenados, 
-                            variables)
-        problem.addConstraint(constraint_suficientes_celdas, 
-                            (mapa, contenedores, "E", "R"))
-        problem.addConstraint(constraint_suficientes_celdas, 
-                            (mapa, contenedores, "N", "S"))'''
+        self.problem.addConstraint(self.constraint_refrigerados, self.variables)
         
     def solve(self):
         return self.problem.getSolutions()
 
-    def constraint_base(self, *args):
+    def constraint_refrigerados(self, *args):
+        condicion = True
         for i in range(len(args)):
-            pass
+            if self.variables[i].tipo == "R" and args[i].tipo == "N":
+                condicion = False
+        
+        return condicion
 
     def constraint_uno_debajo_de_otro(self, *args):
         # i = uno, j = otro
         for i in range(len(args)):
             condicion = []
             for j in range(len(args)):
-                if( i != j and args[j].fila - args[i].fila == 1 and args[i].col == args[j].col or args[i].fila == 2):
+                if( i != j and args[j].fila - args[i].fila == 1 and args[i].col == args[j].col or args[i].fila == self.profundidades[args[i].col]):
                     condicion.append(True)
             # si para un i no se ha encontrado ningún j que satisfaga el condicional, termina
             res = False
@@ -75,32 +92,53 @@ class Problema:
                     res = True
             if res == False:
                 return False
+            '''if len(condicion) == 0:
+                return False'''
 
-        return True
-
-    def constraint_uno_encima_de_otro(self, *args):
-        # i = uno, j = otro
-        for i in range(len(args)):
-            for j in range(i+1, len(args)):
-                if args[j].fila == 2:
-                    if not ( (args[i].fila - args[j].fila == -1 and args[i].col == args[j].col) ):
-                        return False
         return True
 
     def constraint_preferencias(self, *args):
         # Que los del puerto dos esten debajo
         # i = primero // j = otro
+        #print(self.variables)
                    
         for i in range(len(args)):
             condicion = True
             for j in range(len(args)):
-                if( i != j and args[i].col == args[j].col):
-                    break
-                         
                 
+                '''if( i != j and args[i].col == args[j].col and self.variables[i].destino >= self.variables[j].destino):
+                    condicion = True
+            
+            if not condicion:
+                return False
         
+        return True'''
+                #si puerto == 1 y (debajo puerto == 1 o puerto == 2 o está en la base): True
+                '''if (self.variables[i].destino == 1 and \
+                        ( args[i].col == args[j].col and args[j].fila - args[i].fila == 1 and \
+                                (self.variables[j].destino == 1 or self.variables[j].destino == 2 or args[i].fila == 2)
+                        )
+                    ):
+                    condicion = True
+                #si puerto == 2 y (debajo puerto == 2 o está en la base): True
+                if (self.variables[i].destino == 2 and \
+                        ( args[i].col == args[j].col and args[j].fila - args[i].fila == 1 and \
+                                (self.variables[j].destino == 2 or args[i].fila == 2)
+                        )
+                    ):
+                    condicion = True'''
+                
+                #si puerto == 2 y debajo puerto == 1: False        
+                if (i != j and self.variables[i].destino == 2 and \
+                        ( args[i].col == args[j].col and args[j].fila > args[i].fila and \
+                                (self.variables[j].destino == 1)
+                        )
+                    ):
+                    condicion = False
+            if not condicion:
+                return False
+        return True
 
-    
     def encuentra_celdas(self, contenedores, tipo):
         res = list()
         for i in range(len(contenedores)):
@@ -108,9 +146,6 @@ class Problema:
                 if contenedores[i][j] == tipo:
                     res.append( (i,j) )
         return res
-
-    def constraint_prohibidos(self, cont, prohibidos):
-        return cont not in prohibidos
 
     def constraint_suficientes_celdas(self, mapa, contenedores, tipo_celda, tipo_cont):
         ''' Función que determina que si hay suficientes celdas de un tipo para
@@ -126,6 +161,22 @@ class Problema:
                 cont += 1
         
         return celda >= cont
+
+    def contar_contenedores(self, lista, tipo):
+        contador = 0
+        for cont in lista:
+            if tipo in cont:
+                contador += 1
+        return contador
+
+    def contar_celdas(self, lista_de_listas, tipo=""):
+        contador = 0
+        for fila in lista_de_listas:
+            for c in fila:
+                if tipo in c:
+                    contador += 1
+        return contador
+
 
 
 def read_doc(path, file):
@@ -145,7 +196,16 @@ if __name__ == "__main__":
         quit()
     mapa = read_doc(sys.argv[1], sys.argv[2])        
     contenedores = read_doc(sys.argv[1], sys.argv[3])
-    res = Problema(mapa, contenedores).solve()
+    res = ""
+    try:
+        res = Problema(mapa, contenedores).solve()
+    except:
+        pass
 
     for i in res:
         print(i)
+
+    with open(f'{sys.argv[2]}-{sys.argv[3]}.output', 'w') as outfile:
+        outfile.write("Número de soluciones: {}\n".format(len(res)))
+        for d in res:
+            outfile.write(str(d) + "\n")
