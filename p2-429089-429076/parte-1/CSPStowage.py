@@ -3,21 +3,17 @@ import constraint
 
 class Celda:
     """ Clase que representa a una celda del barco. Toma su posición (fila
-        y columna) y su tipo (normal, electrificada o prohibida) """
+        y columna) y su tipo (normal, N; electrificada, E; o prohibida, X) """
     def __init__(self, col, fila, tipo):
-        # Fila en la que se sitia 
         self.fila = fila
-        # Columna en la que se sitia
         self.col = col
-        # Podemos apreciar que el par de coordenadas es (column, row)
         self.tipo = tipo
     
     def __gt__(self, other):
-        # Metodo para ver cual celda es mayor que otra
+        # Metodo que implementa el operador ">" para Celda
         return self.fila + 1 == other.fila and self.col == other.col
     
     def __str__(self):
-        # Metodo para poder imprimir el objeto por pantalla
         return "({}, {})".format(self.col, self.fila)
     
     def __repr__(self):
@@ -34,11 +30,10 @@ class Contenedor:
         self.destino = int(destino)
 
     def __lt__(self, other):
-        # Metodo para ver si el contenedor es menor que otro 
+        # Metodo que implementa el operador "<" para Contenedor
         return self.id < other.id
     
     def __str__(self):
-        # Metodo para poder imprimir el objeto por pantalla
         return str(self.id)
     
     def __repr__(self):
@@ -55,24 +50,20 @@ class Problema:
             self.variables.append(Contenedor(contenedores[i][0], contenedores[i][1], contenedores[i][2]))
         self.variables = tuple(self.variables)
 
-        # Creamos el dominio como un vector de 'Celda' examinando el mapa por columnas de arriba a abajo.
-        # Cuando se lee una X, se asume que se llega a la base del barco y se procede con la siguiente
-        # columna.
-
+        # 'dominio' es un vector de 'Celda' 
         self.dom = list()
 
-        # Creamos la variable profundidades para ver la profundidad real del barco, es decir, hasta donde hay una 
-        # X para que no se puedan posicionar ahi containers y por ende no queden flotando
-
+        # Creamos la variable 'profundidades' para ver la profundidad real del 
+        # barco, es decir, hasta donde hay una X, que representa la base
         self.profundidades = list()
+        
+        # Creamos el dominio examinando el mapa por columnas de arriba a abajo. 
         for pila in range(len(mapa[0])):
-            contador = 0
-            for nivel in range(len(mapa)):
-                if mapa[nivel][pila] == "X": break
-                contador += 1
+            nivel = 0
+            while nivel < len(mapa) and mapa[nivel][pila] != "X":
                 self.dom.append( Celda(pila, nivel, mapa[nivel][pila]) )
-
-            self.profundidades.append(contador - 1)
+                nivel += 1
+            self.profundidades.append(nivel-1)
 
         # Creamos la variable problema para la futura resolucion
         self.problem = constraint.Problem()
@@ -80,34 +71,32 @@ class Problema:
         # add las variables con sus correspondientes dominios
         self.problem.addVariables(self.variables, self.dom)
 
-        # seccion donde colocamos todas las constraints siedno la primera que todas las variables tomen 
-        # valores del dominio difirentes, es decir, para que no haya dos contenedores en una celda por ejemplo
+        # Restricciones del problema
         self.problem.addConstraint(constraint.AllDifferentConstraint(), self.variables)
         self.problem.addConstraint(self.constraint_uno_debajo_de_otro, self.variables)
         self.problem.addConstraint(self.constraint_preferencias, self.variables)
         self.problem.addConstraint(self.constraint_refrigerados, self.variables)
         
     def solve(self):
-        # Metodo para la resolucion final del problema
+        ''' Metodo para la resolucion final del problema '''
         return self.problem.getSolutions()
 
     def constraint_refrigerados(self, *args):
-        # Metodo para ver que los containers Refrigerados se situen tan solo en celdas de energia 
-        # En un momento ponemos como que la condicion planteada es True, es decir que esto se cumple
+        ''' Restricción que hace que que los containers Refrigerados se sitúen tan 
+            solo en celdas E '''
         condicion = True
-
-        # Ahora iteramos sobre todos los argumentos pasados por la constraint
         for i in range(len(args)):
-            # En caso de que la variable (container) sea refrigerador y esté colocado en una celda (dominio)
-            # De tipo N, es decir, no energetica, la condicion pasa a ser False con ello, un tipo no valido
+            # Si el contenedor i-ésimo es refrigerado y está colocado en una celda
+            # de tipo N, la condicion pasa a ser False para descartar esta opción
             if self.variables[i].tipo == "R" and args[i].tipo == "N":
                 condicion = False
         
         return condicion
 
     def constraint_uno_debajo_de_otro(self, *args):
+        ''' Restricción que comprueba si un container está en la base o tiene a
+            otro encima y que con ello no haya containers volando felices '''
         # i = uno, j = otro
-        # Metodo para checkear que hay un container debajo de otro y que con ello no haya containers volando felices
         for i in range(len(args)):
             # vector de booleanos para detectar si algún valor cumple la restricción
             condicion = []
@@ -115,11 +104,10 @@ class Problema:
             if args[i].fila == self.profundidades[args[i].col]: 
                 condicion.append(True)
             for j in range(len(args)):
-                # Condicion que se cumple si i y j son dos containers diferentes, y la diferencia de niveles es una unidad, con 
-                # esto conseguimos que no vueles, ya que estaran uno encima de otros, tambien importante que esten los dos 
-                # containers en la misma columna
+                # Condición que se cumple si la diferencia de niveles es una unidad
+                # (con esto conseguimos que no vuelen, ya que estarán uno encima de
+                # otro) y si están ambos en la misma pila
                 if (i != j and args[j].fila - args[i].fila == 1 and args[i].col == args[j].col):
-                    # Si todo esto se cumple se hace un add de true a la lista de las condiciones
                     condicion.append(True)
             # si para un i no se ha encontrado ningún j que satisfaga el condicional, termina
             if len(condicion) == 0:
@@ -128,14 +116,13 @@ class Problema:
         return True
 
     def constraint_preferencias(self, *args):
-        # Que los del puerto dos esten debajo
-        # i = primero // j = otro
-                   
+        ''' Restricción que comprueba que los contenedores que van al puerto 
+            2 estén en la base o debajo tengan a otro que vaya al puerto 2 '''                   
         for i in range(len(args)):
             # Partimos creyendo que esta condicion se cumple hasta que se demuestre lo contrario
             condicion = True
             for j in range(len(args)):                
-                #si puerto == 2 y debajo puerto == 1: False        
+                #si puerto == 2 y debajo puerto == 1: se incumple la restricción        
                 if (i != j and self.variables[i].destino == 2 and
                         ( args[i].col == args[j].col and args[j].fila > args[i].fila and
                                 (self.variables[j].destino == 1)
