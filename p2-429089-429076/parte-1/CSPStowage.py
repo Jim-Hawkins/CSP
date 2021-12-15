@@ -50,33 +50,29 @@ class Problema:
         for i in range(1, len(contenedores) + 1):
             for j in range(1, len(contenedores) + 1):
                 if i != j:
-                    self.problem.addConstraint(self.constraint_uno_debajo_de_otro, [i, j])
-                #self.problem.addConstraint(self.puertos,  [i, j])
-                pass
+                    self.problem.addConstraint(self.constraint_puertos, [i, j])
+        #self.problem.addConstraint(self.constraint_puertos, self.variables)
+        self.problem.addConstraint(self.constraint_uno_debajo_de_otro, self.variables)
 
     def solve(self):
         ''' Metodo para la resolucion final del problema '''
         return self.problem.getSolutions()
 
-    def constraint_uno_debajo_de_otro(self, a, b):
-        # a = uno, b = otro
-        #print(a, b)
-        # a = (0,0) b = (0,0)
-        # a = (0,0) b = (0,1)
-        # a = (0,3) b = (0,2)
-        # a = (2,3) b = (2,2)
-        #if a==(2,3) and b == (2,2): print((a[1] == self.profundidades[a[0]] or ( (a[0] == b[0]) and ( a[1] - b[1] == 1 ) )), ".......................")
-        return (a[1] == self.profundidades[a[0]] or ( ( (a[0] == b[0]) and abs(a[1] - b[1]) == 1 ) ) )
+    def constraint_puertos(self, varA, varB):
+        def inner(a, b):
+            return ( (a[0] != b[0]) or ( a[1] < b[1] and self.puertos[varB-1] == "2" ) )
+        return inner
 
-    def puertos(varA, varB):
-        def innerFunction(a, b):
-            return ( (a[0] != b[0])
-                     or ( a[1] < b[1]
-                         and self.puertos[varA-1] == "2"
-                         and self.puertos[varB-1] == "2" 
-                        )
-                    )
-        return innerFunction(varA, varB)
+    def constraint_uno_debajo_de_otro(self, *variables):
+        # a = uno, b = otro
+        for a in variables:
+            condicion = ( a[1] == self.profundidades[a[0]] )
+            for b in variables:
+                if ( a != b and ( ( (a[0] == b[0]) and b[1] - a[1] == 1 ) ) ):
+                    condicion = True
+            if not condicion:
+                return False
+        return True
 
 def read_doc(path, file):
     # metodo para leer los documentos pasados por el usuario
@@ -102,8 +98,8 @@ if __name__ == "__main__":
     '''try:
         res = Problema(mapa, contenedores).solve()
     except Exception as e:
-        print(e)'''
-
+        print(e)
+    '''
     res = Problema(mapa, contenedores).solve()
     
     # escribimos el resultado en el documento de salida especificado
