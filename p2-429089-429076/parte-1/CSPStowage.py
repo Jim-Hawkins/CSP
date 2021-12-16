@@ -5,7 +5,6 @@ class Problema:
     """ Clase que representa al problema. Contiene variables, dominios
         y restricciones. Recibe el esquema del barco y la lista de contenedores """
     def __init__(self, mapa, contenedores):
-
         # dominio para contenedores refrigerados y normales
         self.dom_r = list()
         self.dom_s = list()
@@ -17,7 +16,6 @@ class Problema:
                 if celda == "E":   # Solo si es E, añadimos al dominio de los refrigerados
                     self.dom_r.append( (pila, nivel) )
         
-
         # Creamos la variable 'profundidades' para ver la profundidad real del 
         # barco, es decir, hasta donde hay una X, que representa la base
         self.profundidades = list()
@@ -47,28 +45,33 @@ class Problema:
 
         # Restricciones del problema
         self.problem.addConstraint(constraint.AllDifferentConstraint(), self.variables)
-        for i in range(1, len(contenedores) + 1):
-            for j in range(1, len(contenedores) + 1):
-                if i != j:
-                    self.problem.addConstraint(self.constraint_puertos, [i, j])
-        #self.problem.addConstraint(self.constraint_puertos, self.variables)
+        self.problem.addConstraint(self.constraint_puertos, self.variables)
         self.problem.addConstraint(self.constraint_uno_debajo_de_otro, self.variables)
 
     def solve(self):
         ''' Metodo para la resolucion final del problema '''
-        return self.problem.getSolutions()
+        return self.problem.getSolutions()        
 
-    def constraint_puertos(self, varA, varB):
-        def inner(a, b):
-            return ( (a[0] != b[0]) or ( a[1] < b[1] and self.puertos[varB-1] == "2" ) )
-        return inner
+    def constraint_puertos(self, *args):
+        for a in range(len(args)):
+            condicion = False
+            for b in range(len(args)):
+                if ( a != b and self.puertos[a] != "2" or (
+                             args[a][1] == self.profundidades[args[a][0]] or (
+                                 args[a][0] == args[b][0] and args[a][1] < args[b][1] and self.puertos[b] == "2" )
+                                 )
+                    ):
+                    condicion = True
+            if not condicion:
+                return False
+        return True
 
     def constraint_uno_debajo_de_otro(self, *variables):
         # a = uno, b = otro
         for a in variables:
             condicion = ( a[1] == self.profundidades[a[0]] )
             for b in variables:
-                if ( a != b and ( ( (a[0] == b[0]) and b[1] - a[1] == 1 ) ) ):
+                if a != b and a[0] == b[0] and b[1]-a[1] == 1:
                     condicion = True
             if not condicion:
                 return False
@@ -95,12 +98,12 @@ if __name__ == "__main__":
     
     # variable para almacenar resultado del problema
     res = ""
-    '''try:
+    try:
         res = Problema(mapa, contenedores).solve()
     except Exception as e:
         print(e)
-    '''
-    res = Problema(mapa, contenedores).solve()
+    
+    #res = Problema(mapa, contenedores).solve()
     
     # escribimos el resultado en el documento de salida especificado
     with open(f'{sys.argv[1]}/{sys.argv[2]}-{sys.argv[3]}.output', 'w', encoding="UTF-8") as outfile:
