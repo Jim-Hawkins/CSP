@@ -23,18 +23,8 @@ class Node:
                 if self.state[i][j] != other.state[i][j]:
                     return False
         
-        return self.state[-1] == other.state[-1]
-    
-    '''@property
-    def g(self): return self._g
-    @g.setter
-    def g(self,value): self._g = value if type(value) == int else 1
-    
-    @property
-    def h(self): return self._h
-    @h.setter
-    def h(self,value): self._h = value if type(value) == int else 1'''
-
+        return self.state[-1] == other.state[-1] and self.g == other.g and self.h == other.h
+   
     def get_f(self): 
         return self.g + self.h
         
@@ -53,7 +43,7 @@ class Problema:
 
         # Loop until you find the end
         #while len(open_lst)>0:
-        for i in range(50):
+        for i in range(20):
             print("***********************************************")
             print("iteracion: ", i)
             print("***********************************************")
@@ -104,11 +94,9 @@ class Problema:
                         
             posicion_contenedor = mapa_info[contenedor_i][0]
 
-            # Comprobamos que la posi del puerto sea la misma que el contenedor y que ademas que      <-  Hecho
+            # Comprobamos que la posi del barco sea la misma que el contenedor y que ademas que      <-  Hecho
             # el contenedor no tenga ninguna posicion del barco asignada
-            if puerto_actual == posicion_contenedor and \
-                    mapa_info[contenedor_i][1] is None:
-                
+            if puerto_actual == posicion_contenedor and mapa_info[contenedor_i][1] is None:
                 celdas = self.celdas_posibles(mapa_info, contenedor_i)
                 if len(celdas) > 0:
                     children.extend(self.cargar_contenedor(estado, contenedor_i, celdas))
@@ -127,7 +115,6 @@ class Problema:
         for i in children:
             print(i)
         print("-------------------------------------------------------")
-        #print(children)
         return children
 
     # [------------- PRECONDICIONES ----------------]
@@ -218,7 +205,7 @@ class Problema:
         nuevo.g = nuevo.g + 15 + 2*posicion[1]   #coste del operador
         return [ nuevo ]
 
-    def navegar(self, estado:Node, destino):
+    def navegar(self, estado:Node, destino:int):
         "Movemos el barco desde su posicon actual al destino indicado"
         nuevo = self.mycopy(estado)
         nuevo.state[-1]["puerto"] = destino
@@ -307,10 +294,9 @@ if __name__ == "__main__":
     N N
     N E
     '''
-
     S = Node([[0, None], [0, None], [0, None], [0, None],
               {"puerto": 0, (0,0): ["N", True], (0,1): ["N", True], (1,0): ["N", True], (1,1): ["E", True]}]
             )
     P = Problema( S, (("S", 1), ("S", 1), ("S", 2), ("R", 1)) )
-
     P.a_start_alg()
+
