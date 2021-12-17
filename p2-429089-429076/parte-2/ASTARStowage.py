@@ -48,9 +48,9 @@ class Problema:
         i = 0
         # Loop until you find the end
         while len(self.open_lst):
-            print("***********************************************")
+            '''print("***********************************************")
             print("iteracion: ", i)
-            print("***********************************************")
+            print("***********************************************")'''
             # Get the current node
             current = self.open_lst.pop(0)
             self.close_lst.append(current)
@@ -62,13 +62,11 @@ class Problema:
                             None,
                             len(self.close_lst)
                         ]
-                print("llegué")
-                print(current)
+                print("Solución encontrada")
                 return self.back_path(current), stats
 
             children = self.getChildren(current)
-            
-            # Loop through children
+
             for child in children:
                 # Check if this child is on the closed list
                 if self.check_invalid_child(child):
@@ -79,7 +77,11 @@ class Problema:
                 
                 self.open_lst = self.insertSorted(self.open_lst, child)
             i += 1
-        return children
+        
+        # Si no hubiera solución, hay que devolver algo
+        print("No se ha encontrado ninguna solución")
+        stats = [ time.time() - t_inicio, float('inf'), None, float('inf') ]
+        return "No existe solución\n", stats
 
     def getChildren(self, estado:Node):
         children = list()
@@ -88,74 +90,59 @@ class Problema:
         mapa_info = estado.state
         puerto_actual = mapa_info[-1]["puerto"]
         
-        # Barco podra navegar siempre y cuando no este mas alla del ultimo puerto (puerto 2)
-        if puerto_actual != 2:
-            children.extend(self.navegar(estado))
-        '''# Si el barco esta en el puerto 0 y todos los contenedores estan en el barco   <- Hechas precondiciones [falta acciones]
-        if puerto_actual == 0 and  \
-                    self.contenedores_x_en_sitio_y(mapa_info[:-1], 1, 3) and \
-                    self.contenedores_x_en_sitio_y(mapa_info[:-1], 2, 3):
-            children.extend(self.navegar(estado, 1))
-
-        # Si el barco esta en el puerto uno y ademas los contenedores que tienen que ir al puerto uno estan   <- Hechas precondiciones [falta acciones]
-        # en el puerto uno y los contenedores que tienen que ir al puerto dos estan en el barco
-        if puerto_actual == 1 and \
-                    self.contenedores_x_en_sitio_y(mapa_info[:-1], 1, 1) and \
-                    self.contenedores_x_en_sitio_y(mapa_info[:-1], 2, 3): 
-            children.extend(self.navegar(estado, 2))'''
+        # El barco puede avanzar siempre que no esté en el puerto 2, que es el final
+        if puerto_actual < 2:
+            children.append(self.navegar(estado))
 
         for contenedor_i in range(len(estado.state) - 1):
                         
             posicion_contenedor = mapa_info[contenedor_i][0]
 
-            # Comprobamos que la posi del barco sea la misma que el contenedor y que ademas que      <-  Hecho
+            # Comprobamos que la posi del barco sea la misma que el contenedor y que ademas que
             # el contenedor no tenga ninguna posicion del barco asignada
             if puerto_actual == posicion_contenedor and mapa_info[contenedor_i][1] is None:
                 celdas = self.celdas_posibles(mapa_info, contenedor_i)
-                if len(celdas) > 0:
-                    children.extend(self.cargar(estado, contenedor_i, celdas))
-
+                for celda in celdas:
+                    children.append(self.cargar(estado, contenedor_i, celda))
+                
             # Si los contenedores se encuentran en el barco y no hay ninguno encima, se podran descargar donde quieran 
             # Siempre que se descarguen en el mismo puerto donde se encuentra el barco
             if posicion_contenedor == 3 and self.no_hay_nadie_encima(mapa_info, contenedor_i):
-                children.extend(self.descargar(estado, contenedor_i, puerto_actual))
+                children.append(self.descargar(estado, contenedor_i, puerto_actual))
 
-            '''# Barco en el puerto uno, con un contenedor que esta en el barco. Si se descargara                <-PENDIENTE [done i think]
-            # uno que va al puerto 2 no pasa nada, porque antes de partir al puerto 2 hay que
-            # volver a poner estos que se quedaron en el 1 --> metodo general para descargar contenedores en puerto uno
-            if puerto_actual == 1 and posicion_contenedor == 3 and self.no_hay_nadie_encima(mapa_info, contenedor_i):
-                children.extend(self.descargar(estado, contenedor_i, 1))
-
-            # Barco en el puerto dos, con un contenedor en el barco, y ademas el puerto destino del           <-PENDIENTE [done i think]
-            # contenedor es el puerto dos
-            if puerto_actual == 2 and posicion_contenedor == 3 and self.no_hay_nadie_encima(mapa_info, contenedor_i):
-                children.extend(self.descargar(estado, contenedor_i, 2))'''
-        print("-------------------------------------------------------")
+        '''print("-------------------------------------------------------")
         for i in children:
             print(i)
-        print("-------------------------------------------------------")
+        print("-------------------------------------------------------")'''
         return children
 
     # [------------- PRECONDICIONES ----------------]
 
     def celdas_posibles(self, estado:list, contenedor_i:int)->list:
+        ''' Método para decidir qué celdas puede ocupar un contenedor eliminando
+            casos imposibles (restricciones gravedad y tipo de contenedor) '''
+        info_barco = estado[-1]
         posibles = list()
-        for celda in estado[-1].keys():
-            
-            if type(celda) != tuple: 
-                continue
-
+        for celda in info_barco.keys():
+            # No todas las claves son celdas; descartamos las celdas ocupadas (en False)
+            if type(celda) != tuple or not info_barco[celda][1]: continue
+            # Generamos la celda que estaría debajo
             posicion_debajo = ( celda[0], celda[1] + 1 )
-            if posicion_debajo in estado[-1].keys():
-                if not estado[-1][posicion_debajo][1]:
+            # ¿Esa celda existe de verdad?
+            if posicion_debajo in info_barco.keys():
+                # Solo cogemos la celda si la de debajo está ocupada (gravedad)
+                if not info_barco[posicion_debajo][1]:
                     posibles.append(celda)
             else:
+                # Si no existe nada debajo de la celda, es que está en la base, correcto
                 posibles.append(celda)
-                
+        
+        # Una vez satisfecha la gravedad, si el contenedor es R, reducimos sus
+        # posibilidades a celdas E
         if self.info_contenedor[contenedor_i][0] == "R":
             nuevos_posibles = list()
             for i in posibles:
-                if estado[-1][i][0] == "E":
+                if info_barco[i][0] == "E":
                     nuevos_posibles.append(i)
             return nuevos_posibles
         else:
@@ -192,61 +179,78 @@ class Problema:
 
     # [------------- OPERADORES ----------------]
 
-    def cargar(self, estado:Node, contenedor_i:int, celdas:list):
+    def cargar(self, estado:Node, contenedor_i:int, celda:tuple):
         ''' Genera un nuevo estado por cada asignación entre "contenedor" y 
             cada celda libre '''
-        nuevos = list()
         # iteramos sobre las celdas del barco hasta encontrar una libre
         info_barco = estado.state[-1]
-        for celda in celdas:
-            if type(celda) == tuple and info_barco[celda][1]:
-                # copiamos el estado actual y lo modificamos cambiando el
-                # contenedor de turno
-                nuevo = self.mycopy(estado)
-                nuevo.state[contenedor_i][0] = 3
-                nuevo.state[contenedor_i][1] = celda
-                nuevo.g = nuevo.g + 10 + celda[1]   #coste del operador
-                # al terminar con esta celda libre, la marcamos como ocupada
-                nuevo.state[-1][celda][1] = False
-                nuevo.action = f'cargar (contenedor: {contenedor_i}, en: {celda})'
-                nuevo.h = self.heur_1(nuevo) if self.heuristica == 1 else self.heur_2(nuevo)
-                nuevos.append(nuevo)
+        # copiamos el estado actual y lo modificamos cambiando el contenedor de turno
+        nuevo = self.mycopy(estado)
 
-        return nuevos
+        nuevo.state[contenedor_i][0] = 3
+        nuevo.state[contenedor_i][1] = celda
+        # al terminar con esta celda libre, la marcamos como ocupada
+        nuevo.state[-1][celda][1] = False
+        nuevo.action = f'cargar (contenedor: {contenedor_i + 1}, en: {celda})'
+        nuevo.g = nuevo.g + 10 + celda[1]   #coste del operador
+        nuevo.h = self.heur_1(nuevo) if self.heuristica == 1 else self.heur_2(nuevo)
+
+        return nuevo
 
     def descargar(self, estado:Node, contenedor_i:int, sitio:int):
         "metedo para descargar los contenedores que van a puerto x en el puerto y"
         # Coge posicion del estado actual
         posicion = estado.state[contenedor_i][1]
         nuevo = self.mycopy(estado)
+
         # Marcamos posicion como disponible de nuevo
         nuevo.state[-1][posicion][1] = True
-        nuevo.state[contenedor_i][0] = sitio #marcamos sitio donde se ha descargado
-        nuevo.state[contenedor_i][1] = None # No tiene coordenadas del barco
+        nuevo.state[contenedor_i][0] = sitio # marcamos sitio donde se ha descargado
+        nuevo.state[contenedor_i][1] = None  # No tiene coordenadas del barco
+        nuevo.action = f'descargar (contenedor: {contenedor_i + 1}, en puerto: {sitio})'
         nuevo.g = nuevo.g + 15 + 2*posicion[1]   #coste del operador
-        nuevo.action = f'descargar (contenedor: {contenedor_i}, en puerto: {sitio})'
         nuevo.h = self.heur_1(nuevo) if self.heuristica == 1 else self.heur_2(nuevo)
-        return [ nuevo ]
+        
+        return nuevo
 
-    def navegar(self, estado:Node, destino:int = None):
+    def navegar(self, estado:Node):
         "Movemos el barco desde su posicon actual al destino indicado"
         nuevo = self.mycopy(estado)
         puerto_actual = nuevo.state[-1]["puerto"]
+
         nuevo.state[-1]["puerto"] = puerto_actual + 1
-        nuevo.g = nuevo.g + 3500   #coste del operador
         nuevo.action = f'navegar (a puerto: {puerto_actual + 1})'
-        nuevo.h = self.heur_1(nuevo)
+        nuevo.g = nuevo.g + 3500   #coste del operador
         nuevo.h = self.heur_1(nuevo) if self.heuristica == 1 else self.heur_2(nuevo)
-        return [ nuevo ]
+
+        return nuevo
 
     # [-------- HEURÍSTICAS ---------------]
     
     def heur_1(self, estado:Node):
-        """"""
-        return 1
+        """heuristica cada contenedor en su destino retornamos cuantos mal hay"""
+        total_mal = len(estado.state)-1
+        
+        for contenedor_i in range(len(estado.state) -1):
+            if estado.state[contenedor_i][0] == self.info_contenedor[contenedor_i][1]:
+                total_mal -= 1
+        
+        return total_mal
 
     def heur_2(self, estado:Node):
-        return 1
+        "Heuristica contenedores dejados atras que no se deben"
+        
+        # si los contenedores estan con el barco o en su puerto, se premia 
+        total_coste = 0
+        for contenedor_i in range(len(estado.state) -1):
+            # vemos que el contenedor no este en el mismo puerto que el barco
+            if estado.state[contenedor_i][0] != estado.state[-1]["puerto"]: 
+                # Vemos que si ese no es su destino
+                if estado.state[contenedor_i][0] != self.info_contenedor[contenedor_i][1]:
+                    # Se le olvido cargarlo al barco
+                    total_coste += 50 #sumamos cicuenta al coste
+        
+        return total_coste
 
     # [------------- OTROS ----------------]
 
@@ -325,28 +329,62 @@ class Problema:
         
 
 def store_data(info, nombre_archivo):
-    with open(f'{nombre_archivo}.output', "w", encoding="utf-8") as outfile:
+    with open(f'ASTAR-tests/{nombre_archivo}.output', "w", encoding="utf-8") as outfile:
         outfile.write(info[0])
 
-    with open(f'{nombre_archivo}.stat', "w", encoding="utf-8") as outfile:
+    with open(f'ASTAR-tests/{nombre_archivo}.stat', "w", encoding="utf-8") as outfile:
         outfile.write("Tiempo total: " + str(info[1][0]) + "\n")
         outfile.write("Coste total: " + str(info[1][1]) + "\n")
         outfile.write("Longitud del plan: " + str(len(info[0].split("\n"))) + "\n")
         outfile.write("Nodos expandidos: " + str(info[1][3]) + "\n")
 
-def read_doc(mapa, contenedores):
-    with open(mapa, "r") as map_file:
+def read_doc(mapa_path, contenedores):
+    estado = list()
+    cont_info = list()
+    mapa = list()
+    
+    with open("ASTAR-tests/" + contenedores, "r") as cont_file:
+        lectura = cont_file.readline().split(" ")
+        lectura[-1] = lectura[-1].replace("\n", "")
+        while len(lectura) > 0 and lectura[0] != '':
+            # representante del contenedor i-ésimo
+            estado.append([0, None])
+            # tipo y destino del contenedor i-ésimo
+            cont_info.append( (lectura[1], int(lectura[2])) )
 
+            lectura = cont_file.readline().split(" ")
+            lectura[-1] = lectura[-1].replace("\n", "")
+    
+    estado.append( {"puerto": 0} )
+    cont_info = tuple(cont_info)
+
+    with open("ASTAR-tests/" + mapa_path, "r") as map_file:
+        lectura = map_file.readline().split(" ")
+        lectura[-1] = lectura[-1].replace("\n", "")
+        while len(lectura) > 0 and lectura[0] != '':
+            
+            mapa.append(lectura)
+
+            lectura = map_file.readline().split(" ")
+            lectura[-1] = lectura[-1].replace("\n", "")
+
+    for fila in range(len(mapa)):
+        for columna in range(len(mapa[fila])):
+            estado[-1][ (columna, fila) ] = [mapa[fila][columna], True]
+
+    return estado, cont_info
+        
 if __name__ == "__main__":
-    '''
-    Contenedores  Mapa
-    1S1           N N
-    2S2           N N
-    '''
-    contenedores = read_doc(sys.argv[1], sys.argv[2])
-    S = Node([[0, None], [0, None],
-              {"puerto": 0, (0,0): ["N", True], (0,1): ["N", True], (1,0): ["N", True], (1,1): ["N", True]}]
-            )
-    P = Problema( S, (("S", 1), ("S", 2)), int(sys.argv[3]))
+
+    estado_inicial, contenedores = read_doc(sys.argv[1], sys.argv[2])
+
+    S = Node(estado_inicial)
+
+    P = Problema( S, contenedores, int(sys.argv[3]))
+
     info = P.a_start_alg()
+
     store_data(info, f'{sys.argv[1]}-{sys.argv[2]}-{sys.argv[3]}')
+    
+    
+
