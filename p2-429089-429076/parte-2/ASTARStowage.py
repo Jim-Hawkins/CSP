@@ -91,22 +91,22 @@ class Problema:
             if puerto_actual == contenedor[0] and contenedor[1] is None:
                 children.extend(self.cargar_contenedor(estado, contenedor_i))
 
-            # Barco en el puerto uno, con un contenedor que esta en el barco. Si se descargara                <-PENDIENTE
+            # Barco en el puerto uno, con un contenedor que esta en el barco. Si se descargara                <-PENDIENTE [done i think]
             # uno que va al puerto 2 no pasa nada, porque antes de partir al puerto 2 hay que
-            # volver a poner estos que se quedaron en el 1
+            # volver a poner estos que se quedaron en el 1 --> metodo general para descargar contenedores en puerto uno
             if puerto_actual == 1 and contenedor[0] == 3 and self.no_hay_nadie_encima(mapa_info, contenedor_i):
                 children.extend(self.descargar(estado, contenedor_i, 1))
 
-            # Barco en el puerto dos, con un contenedor en el barco, y ademas el puerto destino del           <-PENDIENTE
+            # Barco en el puerto dos, con un contenedor en el barco, y ademas el puerto destino del           <-PENDIENTE [done i think]
             # contenedor es el puerto dos
             if puerto_actual == 2 and contenedor[0] == 3 and self.no_hay_nadie_encima(mapa_info, contenedor_i):
                 children.extend(self.descargar(estado, contenedor_i, 2))
 
-            # Si el barco esta en el puerto 0 y ademas todos los contenedores estan en el barco   <- Hechas precondiciones
+            # Si el barco esta en el puerto 0 y ademas todos los contenedores estan en el barco   <- Hechas precondiciones [falta acciones]
             if puerto_actual == 0 and self.todos_los_contenedores_en(3, mapa_info[:-1]):
                 children.extend(self.mover_p1(estado))
 
-            # Si el barco esta en el puerto uno y ademas los contenedores que tienen que ir al puerto uno estan   <- Hechas precondiciones
+            # Si el barco esta en el puerto uno y ademas los contenedores que tienen que ir al puerto uno estan   <- Hechas precondiciones [falta acciones]
             # en el puerto uno y los contenedores que tienen que ir al puerto dos estan en el barco
             if puerto_actual == 1 and self.contenedores_x_en_sitio_y(mapa_info, 1, 1) and self.contenedores_x_en_sitio_y(mapa_info, 2, 3): #self.todos_los_contenedores_1_en_1(mapa_info) and self.todos_los_contenedores_2_en_barco(mapa_info):
                 children.extend(self.mover_p2())
@@ -117,10 +117,15 @@ class Problema:
         return
         
     def no_hay_nadie_encima(self, estado:list, contenedor_i:int):
-        posicion_encima = ( estado[contenedor_i][0][0], estado[contenedor_i][0][1] - 1 )
+        # Cogemos las coordenadas de misma pila, pero diferente deep (un deep menos, es igual a una altura mas)
+        posicion_encima = ( estado[contenedor_i][1][0], estado[contenedor_i][1][1] - 1 ) #la pos del barco esta en la pos 1 del array del contenedor
 
         if posicion_encima in estado[-1].keys():    # posición legal dentro de la bahía
-            return not estado[-1][posicion_encima]
+            return not estado[-1][posicion_encima] # esto retorna False
+        
+        else:
+            return True # Caso en la que la posicion de arriba no esta contemplada en el barco
+                        # por lo que no hay nada encima
 
     def contenedores_x_en_sitio_y(self, estado:list, destino:int, sitio_deseado:int):
         '''si un contenedor del puerto x no esta en el sitio y return False
@@ -128,12 +133,15 @@ class Problema:
             Combinaciones: x = 1 e y = 1 para "todos los contenedores tipo 1 en puerto 1
                            x = 2 e y = 3 para "todos los contenedores tipo 2 en barco" '''
         for contenedor in estado:
-
+            
+            # sacamos el id de la posicion del contenedor
             contenedor_i = estado.index(contenedor)
+            # vemos cual es el destino del contenedor
             puerto_destino = self.info_contenedor[contenedor_i][1]
+            # Sacamos donde se encuentra el contenedor
             sitio_actual = estado[contenedor_i][0]
 
-            if puerto_destino == destino and sitio_actual != sitio_deseado:
+            if puerto_destino == destino and sitio_actual != sitio_deseado: # tiene que estar en el barco para partir 
                 return False
 
         return True
@@ -157,12 +165,14 @@ class Problema:
         return nuevos
 
     def descargar(self, estado:Node, contenedor_i:int, sitio:int):
-        "metedo para descargar los contenedores que van a puerto x en el puerto x"
+        "metedo para descargar los contenedores que van a puerto x en el puerto y"
+        # Coge posicion del estado actual
         posicion = estado.state[contenedor_i][1]
         nuevo = self.mycopy(estado)
+        # Marcamos posicion como disponible de nuevo
         nuevo.state[-1][posicion][1] = True
-        nuevo.state[contenedor_i][0] = sitio
-        nuevo.state[contenedor_i][1] = None
+        nuevo.state[contenedor_i][0] = sitio #marcamos sitio donde se ha descargado
+        nuevo.state[contenedor_i][1] = None # No tiene coordenadas del barco
         return nuevo
 
     def check_invalid_child(self, node):
