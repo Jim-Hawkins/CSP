@@ -1,0 +1,6 @@
+1. cargar (contenedor: 0, en: (0, 1))
+2. cargar (contenedor: 1, en: (1, 1))
+3. navegar (a puerto: 1)
+4. descargar (contenedor: 0, en puerto: 1)
+5. navegar (a puerto: 2)
+6. descargar (contenedor: 1, en puerto: 2)
