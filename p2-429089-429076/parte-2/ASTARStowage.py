@@ -52,6 +52,7 @@ class Problema:
         self.start = start
         self.info_contenedor = info_contenedor
         self.heuristica = heuristica
+        self.max_iteraciones = 9000
         # Creamos las dos listas, abiertos y cerrados
         self.abierta = list()
         self.cerrada = list()
@@ -64,7 +65,7 @@ class Problema:
         # Contador para los pasos que da el proceso
         i = -1
         # El algoritmo busca mientras le queden nodos por expandir
-        while len(self.abierta):
+        while len(self.abierta) and i < self.max_iteraciones:
             i += 1
             # Tomamos el estado actual y lo añadimos a cerrada
             current = self.abierta.pop(0)
@@ -84,11 +85,11 @@ class Problema:
             # Generamos los sucesores del nodo actual
             children = self.getChildren(current)
 
-            print("-----------------------------------")
+            '''print("-----------------------------------")
             print("iteracion: ",i)
             for a in children:
                 print(a)
-            print("-----------------------------------")
+            print("-----------------------------------")'''
 
             for child in children:
                 # Filtramos los hijos que ya estén en abierta o cerrada
@@ -102,7 +103,11 @@ class Problema:
         # Si no hubiera solución, hay que devolver algo
         print("No se ha encontrado ninguna solución")
         stats = [ time.time() - t_inicio, float('inf'), None, float('inf') ]
-        return "No existe solución\n", stats
+        if i < self.max_iteraciones:
+            texto = "No existe solución\n"
+        else:
+            texto = "No se encontró solución en {} iteraciones\n".format(i)
+        return texto, stats
 
     def getChildren(self, estado:Node):
         children = list()
@@ -227,18 +232,18 @@ class Problema:
     # [-------- HEURÍSTICAS ---------------]
     
     def heur_1(self, estado:Node):
-        """heuristica cada contenedor en su destino retornamos cuantos mal hay"""
+        ''' Heurística que cuenta cuántos nodos faltan por llevar a su destino '''
         total_mal = len(estado.state)-1
         
         for contenedor_i in range(len(estado.state) -1):
             # Por cada contenedor en su sitio se va reduciendo el coste
             if estado.state[contenedor_i][0] == self.info_contenedor[contenedor_i][1]:
                 total_mal -= 1
+                                
+        return total_mal 
         
-        return total_mal
-
     def heur_2(self, estado:Node):
-        "Heuristica contenedores dejados atras que no se deben"
+        ''' Heuristica que cuenta los contenedores que el barco deja atrás '''
         
         # si los contenedores estan con el barco o en su puerto, se premia 
         total_coste = 0
