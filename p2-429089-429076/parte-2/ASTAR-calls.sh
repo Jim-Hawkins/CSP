@@ -1,10 +1,44 @@
-for m in {1..7}
-do
-    for c in {1..4}
-    do
-        for h in {1..2}
-        do
-            python ASTARStowage.py mapa$m contenedores$c $h &
-        done
-    done
-done
+./ASTARStowage.sh ASTAR-tests mapa1 contenedores1 1
+./ASTARStowage.sh ASTAR-tests mapa2 contenedores2 2
+./ASTARStowage.sh ASTAR-tests mapa3 contenedores3 1
+./ASTARStowage.sh ASTAR-tests mapa4 contenedores1 2
+./ASTARStowage.sh ASTAR-tests mapa5 contenedores2 1
+./ASTARStowage.sh ASTAR-tests mapa6 contenedores3 2
+./ASTARStowage.sh ASTAR-tests mapa7 contenedores1 1
+./ASTARStowage.sh ASTAR-tests mapa1 contenedores2 2
+./ASTARStowage.sh ASTAR-tests mapa2 contenedores3 1
+./ASTARStowage.sh ASTAR-tests mapa3 contenedores1 2
+./ASTARStowage.sh ASTAR-tests mapa4 contenedores2 1
+./ASTARStowage.sh ASTAR-tests mapa5 contenedores3 2
+./ASTARStowage.sh ASTAR-tests mapa6 contenedores1 1
+./ASTARStowage.sh ASTAR-tests mapa7 contenedores2 2
+./ASTARStowage.sh ASTAR-tests mapa1 contenedores3 1
+./ASTARStowage.sh ASTAR-tests mapa2 contenedores1 2
+./ASTARStowage.sh ASTAR-tests mapa3 contenedores2 1
+./ASTARStowage.sh ASTAR-tests mapa4 contenedores3 2
+./ASTARStowage.sh ASTAR-tests mapa5 contenedores1 1
+./ASTARStowage.sh ASTAR-tests mapa6 contenedores2 2
+./ASTARStowage.sh ASTAR-tests mapa7 contenedores3 1
+./ASTARStowage.sh ASTAR-tests mapa1 contenedores1 2
+./ASTARStowage.sh ASTAR-tests mapa2 contenedores2 1
+./ASTARStowage.sh ASTAR-tests mapa3 contenedores3 2
+./ASTARStowage.sh ASTAR-tests mapa4 contenedores1 1
+./ASTARStowage.sh ASTAR-tests mapa5 contenedores2 2
+./ASTARStowage.sh ASTAR-tests mapa6 contenedores3 1
+./ASTARStowage.sh ASTAR-tests mapa7 contenedores1 2
+./ASTARStowage.sh ASTAR-tests mapa1 contenedores2 1
+./ASTARStowage.sh ASTAR-tests mapa2 contenedores3 2
+./ASTARStowage.sh ASTAR-tests mapa3 contenedores1 1
+./ASTARStowage.sh ASTAR-tests mapa4 contenedores2 2
+./ASTARStowage.sh ASTAR-tests mapa5 contenedores3 1
+./ASTARStowage.sh ASTAR-tests mapa6 contenedores1 2
+./ASTARStowage.sh ASTAR-tests mapa7 contenedores2 1
+./ASTARStowage.sh ASTAR-tests mapa1 contenedores3 2
+./ASTARStowage.sh ASTAR-tests mapa2 contenedores1 1
+./ASTARStowage.sh ASTAR-tests mapa3 contenedores2 2
+./ASTARStowage.sh ASTAR-tests mapa4 contenedores3 1
+./ASTARStowage.sh ASTAR-tests mapa5 contenedores1 2
+./ASTARStowage.sh ASTAR-tests mapa6 contenedores2 1
+./ASTARStowage.sh ASTAR-tests mapa7 contenedores3 2
+
+echo :D

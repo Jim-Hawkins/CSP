@@ -52,7 +52,7 @@ class Problema:
         self.start = start
         self.info_contenedor = info_contenedor
         self.heuristica = heuristica
-        self.max_iteraciones = 9000
+        self.max_iteraciones = 9000 # para casos de debug
         # Creamos las dos listas, abiertos y cerrados
         self.abierta = list()
         self.cerrada = list()
@@ -65,7 +65,7 @@ class Problema:
         # Contador para los pasos que da el proceso
         i = -1
         # El algoritmo busca mientras le queden nodos por expandir
-        while len(self.abierta) and i < self.max_iteraciones:
+        while len(self.abierta):
             i += 1
             # Tomamos el estado actual y lo añadimos a cerrada
             current = self.abierta.pop(0)
@@ -348,25 +348,28 @@ class Problema:
 
         
 
-def store_data(info, nombre_archivo):
+def store_data(info, path, nombre_archivo):
     "Metodo para guardar la info final del problema"
 
-    with open(f'ASTAR-tests/{nombre_archivo}.output', "w", encoding="utf-8") as outfile:
+    with open(f'{path}/{nombre_archivo}.output', "w", encoding="utf-8") as outfile:
         outfile.write(info[0])
 
-    with open(f'ASTAR-tests/{nombre_archivo}.stat', "w", encoding="utf-8") as outfile:
+    if info[0] == "No existe solución\n": plan = "0"
+    else: plan = str( len(info[0].split("\n")) )
+
+    with open(f'{path}/{nombre_archivo}.stat', "w", encoding="utf-8") as outfile:
         outfile.write("Tiempo total: " + str(info[1][0]) + "\n")
         outfile.write("Coste total: " + str(info[1][1]) + "\n")
-        outfile.write("Longitud del plan: " + str(len(info[0].split("\n"))) + "\n")
+        outfile.write("Longitud del plan: " + plan + "\n")
         outfile.write("Nodos expandidos: " + str(info[1][3]) + "\n")
 
-def read_doc(mapa_path, contenedores):
+def read_doc(path, mapa_path, contenedores):
     "Metodo para leer los datos pasados por los archivos"
     estado = list()
     cont_info = list()
     mapa = list()
     
-    with open("ASTAR-tests/" + contenedores, "r") as cont_file:
+    with open(path + "/" + contenedores, "r") as cont_file:
         lectura = cont_file.readline().split(" ")
         lectura[-1] = lectura[-1].replace("\n", "")
         while len(lectura) > 0 and lectura[0] != '':
@@ -381,7 +384,7 @@ def read_doc(mapa_path, contenedores):
     estado.append( {"puerto": 0} )
     cont_info = tuple(cont_info)
 
-    with open("ASTAR-tests/" + mapa_path, "r") as map_file:
+    with open(path + "/" + mapa_path, "r") as map_file:
         lectura = map_file.readline().split(" ")
         lectura[-1] = lectura[-1].replace("\n", "")
         while len(lectura) > 0 and lectura[0] != '':
@@ -400,11 +403,11 @@ def read_doc(mapa_path, contenedores):
         
 if __name__ == "__main__":
 
-    estado_inicial, contenedores = read_doc(sys.argv[1], sys.argv[2])
+    estado_inicial, contenedores = read_doc(sys.argv[1], sys.argv[2], sys.argv[3])
     S = Node(estado_inicial)
-    P = Problema( S, contenedores, int(sys.argv[3]))
+    P = Problema( S, contenedores, int(sys.argv[4]))
     info = P.a_start_alg()
-    store_data(info, f'{sys.argv[1]}-{sys.argv[2]}-{sys.argv[3]}')
+    store_data(info, sys.argv[1], f'{sys.argv[2]}-{sys.argv[3]}-{sys.argv[4]}')
     
     
 
