@@ -52,7 +52,6 @@ class Problema:
         self.start = start
         self.info_contenedor = info_contenedor
         self.heuristica = heuristica
-        self.max_iteraciones = 9000 # para casos de debug
         # Creamos las dos listas, abiertos y cerrados
         self.abierta = list()
         self.cerrada = list()
@@ -85,12 +84,6 @@ class Problema:
             # Generamos los sucesores del nodo actual
             children = self.getChildren(current)
 
-            '''print("-----------------------------------")
-            print("iteracion: ",i)
-            for a in children:
-                print(a)
-            print("-----------------------------------")'''
-
             for child in children:
                 # Filtramos los hijos que ya estén en abierta o cerrada
                 if self.check_cerrado(child) or self.check_abierto(child):
@@ -103,10 +96,7 @@ class Problema:
         # Si no hubiera solución, hay que devolver algo
         print("No se ha encontrado ninguna solución")
         stats = [ time.time() - t_inicio, float('inf'), None, float('inf') ]
-        if i < self.max_iteraciones:
-            texto = "No existe solución\n"
-        else:
-            texto = "No se encontró solución en {} iteraciones\n".format(i)
+        texto = "No existe solución\n"
         return texto, stats
 
     def getChildren(self, estado:Node):
